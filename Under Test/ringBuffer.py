@@ -39,7 +39,7 @@ class RingBuffer:
         else:
             self._open(path)
 
-    # setup 
+    # setup
 
     def _create(self, path: str, capacity: int):
         self.capacity = capacity
@@ -54,9 +54,11 @@ class RingBuffer:
         if not os.path.exists(path):
             raise FileNotFoundError(path)
 
-        self._fd = os.open(path, os.O_RDWR)
-        header_bytes = os.pread(self._fd, self.HEADER_SIZE, 0)
+        with open(path, "rb") as f:
+            header_bytes = f.read(self.HEADER_SIZE)
         magic, slot_size, capacity, _ = struct.unpack(self.HEADER_FMT, header_bytes)
+
+        self._fd = os.open(path, os.O_RDWR)
 
         if magic != self.MAGIC:
             raise ValueError(f"{path} is not a valid ring buffer file")
@@ -72,7 +74,7 @@ class RingBuffer:
             self.HEADER_FMT, self.MAGIC, self.RECORD_SIZE, self.capacity, write_seq
         )
 
-    #shared sequence number
+    # shared sequence number
 
     @property
     def write_seq(self) -> int:
