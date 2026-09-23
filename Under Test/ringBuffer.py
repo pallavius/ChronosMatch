@@ -39,7 +39,7 @@ class RingBuffer:
         else:
             self._open(path)
 
-    # -- setup -------------------------------------------------------
+    # setup 
 
     def _create(self, path: str, capacity: int):
         self.capacity = capacity
@@ -72,6 +72,7 @@ class RingBuffer:
             self.HEADER_FMT, self.MAGIC, self.RECORD_SIZE, self.capacity, write_seq
         )
 
+    #shared sequence number
 
     @property
     def write_seq(self) -> int:
@@ -83,8 +84,10 @@ class RingBuffer:
     def _slot_offset(self, seq: int) -> int:
         return self.HEADER_SIZE + (seq % self.capacity) * self.RECORD_SIZE
 
+    # producer side
 
     def push(self, order: Order):
+        """Write one order into raw bytes, then publish it."""
         seq = self.write_seq
         offset = self._slot_offset(seq)
         struct.pack_into(
@@ -101,6 +104,7 @@ class RingBuffer:
     def flush(self):
         self._mm.flush()
 
+    # consumer side
 
     def read_slot(self, seq: int) -> Order:
         offset = self._slot_offset(seq)
@@ -110,9 +114,6 @@ class RingBuffer:
         return Order(order_id, price, quantity, side)
 
     def read_new(self, from_seq: int):
-        """
-        Return (records, new_from_seq, lost_count) 
-        """
         current = self.write_seq
         lost = 0
 
