@@ -1,15 +1,18 @@
 import asyncio
 
-from order_generator import generate_orders
+from order_generator import create_order
 from ringBuffer import RingBuffer, Order, Side
 
 
 async def main():
+
     ring = RingBuffer("orders.dat", capacity=1000, create=True)
 
-    orders = await generate_orders(100_000)
+    number_of_orders = 100_000
 
-    for order_data in orders:
+    for order_id in range(1, number_of_orders + 1):
+
+        order_data = create_order(order_id)
 
         side = Side.BUY if order_data["side"] == "BUY" else Side.SELL
 
@@ -21,6 +24,11 @@ async def main():
         )
 
         ring.push(order)
+
+        # Give the OrderBook process a chance to read new orders
+        if order_id % 100 == 0:
+            ring.flush()
+            await asyncio.sleep(0)
 
     ring.flush()
     ring.close()
