@@ -1,1 +1,71 @@
-{"best_bid": [129.91, 174], "best_ask": [166.51, 313], "spread": 36.599999999999994, "depth": [{"bids": [[129.91, 174], [128.55, 68], [126.27, 964], [125.71, 597], [124.56, 574]], "asks": [[166.51, 313], [166.88, 436], [171.74, 931], [179.93, 428], [180.03, 896]]}], "orders_processed": 1000, "orders_with_fills": 430, "total_fills": 774}
+{
+  "best_bid": [
+    122.23,
+    804
+  ],
+  "best_ask": [
+    148.28,
+    245
+  ],
+  "spread": 26.049999999999997,
+  "depth": [
+    {
+      "bids": [
+        [
+          122.23,
+          804
+        ],
+        [
+          122.22,
+          843
+        ],
+        [
+          122.21,
+          555
+        ],
+        [
+          122.18,
+          99
+        ],
+        [
+          122.16,
+          669
+        ]
+      ],
+      "asks": [
+        [
+          148.28,
+          245
+        ],
+        [
+          165.27,
+          246
+        ],
+        [
+          166.62,
+          15
+        ],
+        [
+          166.98,
+          317
+        ],
+        [
+          166.99,
+          33
+        ]
+      ]
+    }
+  ],
+  "orders_processed": 100000,
+  "orders_with_fills": 43081,
+  "total_fills": 78332,
+  "orders_lost": 0,
+  "elapsed_seconds": 1.1244848,
+  "throughput_orders_per_sec": 88929.61469999416,
+  "latency_measurement": "book.add_limit_order call duration",
+  "average_latency_ns": 1620.004,
+  "p95_latency_ns": 3000,
+  "p99_latency_ns": 6300,
+  "min_latency_ns": 400,
+  "max_latency_ns": 2161300
+}

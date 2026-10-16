@@ -1,0 +1,26 @@
+[
+  {
+    "label": "mmap (zero-copy)",
+    "orders": 1000000,
+    "wall_seconds": 4.1755779000232,
+    "producer_cpu_seconds": 3.46875,
+    "consumer_cpu_seconds": 1.359375,
+    "total_cpu_seconds": 4.828125,
+    "throughput_orders_per_sec": 239487.8083808337,
+    "cpu_us_per_order": 4.828125,
+    "lost": 0,
+    "verified_count": 1000000
+  },
+  {
+    "label": "pickle (multiprocessing.connection)",
+    "orders": 1000000,
+    "wall_seconds": 18.981687400024384,
+    "producer_cpu_seconds": 16.734375,
+    "consumer_cpu_seconds": 11.625,
+    "total_cpu_seconds": 28.359375,
+    "throughput_orders_per_sec": 52682.35531045124,
+    "cpu_us_per_order": 28.359375,
+    "lost": null,
+    "verified_count": 1000000
+  }
+]

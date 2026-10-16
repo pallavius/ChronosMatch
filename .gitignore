@@ -2,7 +2,8 @@
 __pycache__/
 *.pyc
 data/*.mmap
-
+# Generated mmap audit data
+test/mmap_audit.dat
 # Cython/build artifacts
 build/
 *.pyd

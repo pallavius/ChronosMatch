@@ -6,7 +6,7 @@ from ringBuffer import RingBuffer, Order, Side
 
 async def main():
 
-    ring = RingBuffer("orders.dat", capacity=1000, create=True)
+    ring = RingBuffer("orders.dat", capacity=100_000, create=True)
 
     number_of_orders = 100_000
 
