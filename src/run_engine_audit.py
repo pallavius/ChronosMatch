@@ -11,7 +11,7 @@ SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
 from ringBuffer import RingBuffer
 
-COUNT = 1_000_000
+COUNT = 100_000
 CAPACITY = 120_000
 
 

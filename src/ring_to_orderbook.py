@@ -1,4 +1,5 @@
 
+import os
 import sys
 import json
 import time
@@ -14,6 +15,8 @@ from trade_buffer import TradeBuffer, Trade
 import order_book
 
 EXPECTED_ORDERS = 100_000
+SNAPSHOT_INTERVAL = 1000
+WHALE_LEVEL_THRESHOLD = 3
 
 
 def percentile(values, percent):
@@ -25,6 +28,30 @@ def percentile(values, percent):
     index = math.ceil((percent / 100) * len(ordered)) - 1
     return ordered[max(0, index)]
 
+
+def write_snapshot(
+    book,
+    orders_processed,
+    orders_with_fills,
+    total_fills,
+    last_whale_event=None
+):
+    """Write the current order-book state for the dashboard."""
+    snapshot = {
+        "best_bid": book.best_bid(),
+        "best_ask": book.best_ask(),
+        "spread": book.spread(),
+        "depth": book.depth(5),
+        "orders_processed": orders_processed,
+        "orders_with_fills": orders_with_fills,
+        "total_fills": total_fills,
+        "last_whale_event": last_whale_event
+    }
+
+    snapshot_path = ROOT / "book_snapshot.json"
+
+    with open(snapshot_path, "w", encoding="utf-8") as f:
+        json.dump(snapshot, f)
 
 def main():
     ring = RingBuffer("orders.dat", create=False)
@@ -46,9 +73,8 @@ def main():
         total_lost = 0
         trades_buffered = 0
 
-        # Store order-processing durations in nanoseconds.
         latencies_ns = []
-
+        last_whale_event = None
         start_ns = time.perf_counter_ns()
 
         print("Starting ChronosMatch engine audit...")
@@ -69,9 +95,7 @@ def main():
                     )
 
                     exit_ns = time.perf_counter_ns()
-
-                    latency_ns = exit_ns - entry_ns
-                    latencies_ns.append(latency_ns)
+                    latencies_ns.append(exit_ns - entry_ns)
 
                     orders_processed += 1
 
@@ -79,6 +103,34 @@ def main():
                         orders_with_fills += 1
                         total_fills += len(fills)
 
+                        # Detect executions across multiple price levels.
+                        filled_prices = {
+                            round(float(fill["price"]), 8)
+                            for fill in fills
+                        }
+
+                        if len(filled_prices) >= WHALE_LEVEL_THRESHOLD:
+                            last_whale_event = {
+                                "order_id": order.order_id,
+                                "side": (
+                                    "BUY"
+                                    if order.side in (0, "BUY")
+                                    else "SELL"
+                                ),
+                                "levels_cleared": len(filled_prices),
+                                "timestamp": time.strftime("%H:%M:%S")
+                            }
+
+                            print(
+                                f"\nWHALE ALERT: Order "
+                                f"{last_whale_event['order_id']} "
+                                f"({last_whale_event['side']}) executed "
+                                f"across {last_whale_event['levels_cleared']} "
+                                f"price levels at "
+                                f"{last_whale_event['timestamp']}!"
+                            )
+
+                        # Preserve every fill in the trade buffer.
                         for fill in fills:
                             trade = Trade(
                                 maker_order_id=fill["maker_order_id"],
@@ -94,6 +146,16 @@ def main():
                             trade_buffer.push(trade)
                             trades_buffered += 1
 
+                    # Publish progress periodically.
+                    if orders_processed % SNAPSHOT_INTERVAL == 0:
+                        write_snapshot(
+                            book,
+                            orders_processed,
+                            orders_with_fills,
+                            total_fills,
+                            last_whale_event
+                        )
+
                 current_seq = current
 
             else:
@@ -108,6 +170,7 @@ def main():
             if latencies_ns else 0
         )
 
+        # Final snapshot includes all audit statistics.
         snapshot = {
             "best_bid": book.best_bid(),
             "best_ask": book.best_ask(),
@@ -128,14 +191,13 @@ def main():
             "p95_latency_ns": percentile(latencies_ns, 95),
             "p99_latency_ns": percentile(latencies_ns, 99),
             "min_latency_ns": min(latencies_ns) if latencies_ns else 0,
-            "max_latency_ns": max(latencies_ns) if latencies_ns else 0
+            "max_latency_ns": max(latencies_ns) if latencies_ns else 0,
+            "last_whale_event": last_whale_event
         }
 
-        with open(
-            ROOT / "book_snapshot.json",
-            "w",
-            encoding="utf-8"
-        ) as f:
+        snapshot_path = ROOT / "book_snapshot.json"
+
+        with open(snapshot_path, "w", encoding="utf-8") as f:
             json.dump(snapshot, f, indent=2)
 
         print("\n--- ChronosMatch Engine Audit ---")

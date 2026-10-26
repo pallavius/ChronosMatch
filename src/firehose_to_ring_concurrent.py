@@ -9,6 +9,7 @@ from ringBuffer import RingBuffer, Order, Side
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--count", type=int, default=100_000)
+    parser.add_argument("--delay", type=float, default=0)
     args = parser.parse_args()
 
     ring = RingBuffer("orders.dat", create=False)
@@ -27,7 +28,7 @@ async def main():
 
             if order_id % 100 == 0:
                 ring.flush()
-                await asyncio.sleep(0)
+                await asyncio.sleep(args.delay)
 
         ring.flush()
         print(f"Producer completed: {args.count:,} orders written.")

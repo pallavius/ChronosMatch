@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChronosMatch | Trading Dashboard</title>
+    <link rel="stylesheet" href="/static/style1.css">
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-icon">C</span>
+            <div>
+                <h1>ChronosMatch</h1>
+                <p>MARKET INTELLIGENCE</p>
+            </div>
+        </div>
+        <div class="live-status">
+            <span class="live-dot"></span> ENGINE MONITOR
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="welcome">
+            <div>
+                <h2>Market Overview</h2>
+                <p>Real-time order book and execution monitoring</p>
+            </div>
+            <span class="market-tag">TEST MARKET</span>
+        </section>
+
+        <section class="stats">
+            <div class="card">
+                <p>ORDERS PROCESSED</p>
+                <h2 id="processed">0</h2>
+                <span>Incoming orders</span>
+            </div>
+            <div class="card">
+                <p>ORDERS WITH FILLS</p>
+                <h2 id="with-fills">0</h2>
+                <span>Successfully matched</span>
+            </div>
+            <div class="card">
+                <p>TOTAL FILLS</p>
+                <h2 id="fills">0</h2>
+                <span>Matched executions</span>
+            </div>
+            <div class="card spread-card">
+                <p>MARKET SPREAD</p>
+                <h2 id="spread">--</h2>
+                <span>Best ask − best bid</span>
+            </div>
+        </section>
+
+        <section class="market-grid">
+            <div class="panel">
+                <div class="panel-heading">
+                    <h3>Order Book Depth</h3>
+                    <span>TOP 5 LEVELS</span>
+                </div>
+
+                <div class="book-columns">
+                    <div>
+                        <h4 class="bid-title">BUY ORDERS / BIDS</h4>
+                        <table>
+                            <thead>
+                                <tr><th>PRICE</th><th>QUANTITY</th></tr>
+                            </thead>
+                            <tbody id="bids"></tbody>
+                        </table>
+                    </div>
+
+                    <div>
+                        <h4 class="ask-title">SELL ORDERS / ASKS</h4>
+                        <table>
+                            <thead>
+                                <tr><th>PRICE</th><th>QUANTITY</th></tr>
+                            </thead>
+                            <tbody id="asks"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="best-prices">
+                    <div>
+                        <span>BEST BID</span>
+                        <strong id="best-bid">--</strong>
+                    </div>
+                    <div>
+                        <span>BEST ASK</span>
+                        <strong id="best-ask">--</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel whale-panel">
+                <div class="panel-heading">
+                    <h3>Whale Activity</h3>
+                    <span class="alert-tag">ALERTS</span>
+                </div>
+                <div id="whale-content" class="whale-content">
+                    <div class="whale-icon">🐋</div>
+                    <h3>No whale activity yet</h3>
+                    <p>Large multi-level executions will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <span><span class="live-dot"></span> Dashboard connected</span>
+            <span>Refreshes every second</span>
+            <span id="updated">Waiting for data...</span>
+        </footer>
+    </main>
+
+    <script>
+        let previousWhaleKey = "";
+
+        function formatNumber(value) {
+            return Number(value ?? 0).toLocaleString("en-US");
+        }
+
+        function renderRows(elementId, rows, type) {
+            const tbody = document.getElementById(elementId);
+
+            if (!Array.isArray(rows) || rows.length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="2">No market data</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = rows.slice(0, 5).map(row => `
+                <tr>
+                    <td class="${type}">${Number(row[0]).toFixed(2)}</td>
+                    <td>${formatNumber(row[1])}</td>
+                </tr>
+            `).join("");
+        }
+
+        async function updateDashboard() {
+            try {
+                const response = await fetch("/api/snapshot", {
+                    cache: "no-store"
+                });
+
+                if (!response.ok) throw new Error("Snapshot unavailable");
+
+                const data = await response.json();
+
+                document.getElementById("processed").textContent =
+                    formatNumber(data.orders_processed);
+                document.getElementById("with-fills").textContent =
+                    formatNumber(data.orders_with_fills);
+                document.getElementById("fills").textContent =
+                    formatNumber(data.total_fills);
+                document.getElementById("spread").textContent =
+                    Number(data.spread ?? 0).toFixed(2);
+
+                const depth = data.depth?.[0] ?? {};
+                renderRows("bids", depth.bids, "bid-price");
+                renderRows("asks", depth.asks, "ask-price");
+
+                const bestBid = data.best_bid;
+                const bestAsk = data.best_ask;
+
+                document.getElementById("best-bid").textContent =
+                    bestBid ? `${Number(bestBid[0]).toFixed(2)} / ${formatNumber(bestBid[1])}` : "--";
+
+                document.getElementById("best-ask").textContent =
+                    bestAsk ? `${Number(bestAsk[0]).toFixed(2)} / ${formatNumber(bestAsk[1])}` : "--";
+
+                const whale = data.last_whale_event;
+                const whaleBox = document.getElementById("whale-content");
+
+                if (whale) {
+                    const key = `${whale.order_id}-${whale.timestamp}`;
+
+                    if (key !== previousWhaleKey) {
+                        whaleBox.innerHTML = `
+                            <div class="whale-icon">🐋</div>
+                            <span class="alert-tag">WHALE DETECTED</span>
+                            <h3>${whale.side} ORDER</h3>
+                            <p class="whale-order">#${formatNumber(whale.order_id)}</p>
+                            <div class="levels">
+                                ${formatNumber(whale.levels_cleared)} PRICE LEVELS CLEARED
+                            </div>
+                            <p class="timestamp">Execution time: ${whale.timestamp}</p>
+                        `;
+                        previousWhaleKey = key;
+                    }
+                }
+
+                document.getElementById("updated").textContent =
+                    "Updated: " + new Date().toLocaleTimeString();
+
+            } catch (error) {
+                document.getElementById("updated").textContent =
+                    "Waiting for engine data...";
+            }
+        }
+
+        updateDashboard();
+        setInterval(updateDashboard, 1000);
+    </script>
+</body>
+</html>
+
+

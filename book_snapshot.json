@@ -1,72 +1,78 @@
 {
   "best_bid": [
-    142.21,
-    700
+    126.61,
+    405
   ],
   "best_ask": [
-    147.31,
-    33
+    147.77,
+    275
   ],
-  "spread": 5.099999999999994,
+  "spread": 21.16000000000001,
   "depth": [
     {
       "bids": [
         [
-          142.21,
-          700
+          126.61,
+          405
         ],
         [
-          141.98,
-          746
+          123.42,
+          508
         ],
         [
-          132.38,
-          637
+          123.41,
+          1187
         ],
         [
-          131.75,
-          539
+          123.39,
+          885
         ],
         [
-          128.2,
-          922
+          123.38,
+          235
         ]
       ],
       "asks": [
         [
-          147.31,
-          33
+          147.77,
+          275
         ],
         [
-          147.52,
-          793
+          161.56,
+          307
         ],
         [
-          151.74,
-          572
+          162.2,
+          509
         ],
         [
-          153.25,
-          76
+          163.06,
+          799
         ],
         [
-          158.04,
-          809
+          168.0,
+          73
         ]
       ]
     }
   ],
   "orders_processed": 100000,
-  "orders_with_fills": 42750,
-  "total_fills": 77936,
-  "trades_buffered": 77936,
+  "orders_with_fills": 42632,
+  "total_fills": 77927,
+  "trades_buffered": 77927,
   "orders_lost": 0,
-  "elapsed_seconds": 0.2597525,
-  "throughput_orders_per_sec": 384981.85772995447,
+  "elapsed_seconds": 30.0467003,
+  "throughput_orders_per_sec": 3328.152476030787,
   "latency_measurement": "book.add_limit_order call duration",
-  "average_latency_ns": 912.086,
-  "p95_latency_ns": 2000,
-  "p99_latency_ns": 3600,
-  "min_latency_ns": 200,
-  "max_latency_ns": 1437100
+  "average_latency_ns": 6576.595,
+  "p95_latency_ns": 19700,
+  "p99_latency_ns": 44100,
+  "min_latency_ns": 600,
+  "max_latency_ns": 14418800,
+  "last_whale_event": {
+    "order_id": 99993,
+    "side": "SELL",
+    "levels_cleared": 4,
+    "timestamp": "20:50:43"
+  }
 }
