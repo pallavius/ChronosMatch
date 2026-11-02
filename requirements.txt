@@ -1,0 +1,5 @@
+
+Flask
+Cython
+numpy
+windows-curses
